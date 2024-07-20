@@ -1,0 +1,8 @@
+input::placeholder {
+    color: black;
+    opacity: 1;
+}
+
+.menu:focus {
+    color: blue;
+}
