@@ -8,6 +8,7 @@ import MenubarUn from './MenubarUn';
 import ModalAddTask from './ModelAddTask';
 import { ToastContainer, toast } from 'react-toastify';
 import '../../node_modules/react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
 
 
 const TaskManagerHome2 = () => { 
@@ -29,15 +30,24 @@ const TaskManagerHome2 = () => {
     return dateObject.getFullYear() === today.getFullYear() && dateObject.getMonth() === today.getMonth();
   });
 
-  const allTasks = JSON.parse(localStorage.getItem('dailyTasks'))|| [
-    { id: 1, title: 'Morning Exercise', completed: false, spentHours: 0, spentMinutes: 0, defaultTime: 30 },
-    { id: 2, title: 'Read a Book', completed: false, spentHours: 0, spentMinutes: 0, defaultTime: 120 },
-    { id: 3, title: 'React', defaultTime: 245, spentHours: 0, spentMinutes: 0, completed: false },
-    { id: 4, title: 'Java', defaultTime: 120, spentMinutes: 0, completed: false },
-    { id: 5, title: 'Meditation', defaultTime: 25, spentHours: 0, spentMinutes: 0, completed: false },
-  ];
+  const [tasks, setTasks] = useState([]);
 
-  const [tasks, setTasks] = useState(allTasks);
+  useEffect(() => {
+    // Fetch data from the backend when the component mounts
+    fetch('/api/tasks')
+      .then(response => response.json())
+      .then(data => setTasks(data))
+      .catch(error => console.error('Error fetching data:', error));
+  }, []);
+  // const allTasks = JSON.parse(localStorage.getItem('dailyTasks'))|| [
+  //   { id: 1, title: 'Morning Exercise', completed: false, spentHours: 0, spentMinutes: 0, defaultMinutes: 30 },
+  //   { id: 2, title: 'Read a Book', completed: false, spentHours: 0, spentMinutes: 0, defaultMinutes: 120 },
+  //   { id: 3, title: 'React', defaultMinutes: 245, spentHours: 0, spentMinutes: 0, completed: false },
+  //   { id: 4, title: 'Java', defaultMinutes: 120, spentMinutes: 0, completed: false },
+  //   { id: 5, title: 'Meditation', defaultMinutes: 25, spentHours: 0, spentMinutes: 0, completed: false },
+  // ];
+
+  // const [tasks, setTasks] = useState(allTasks);
   const [showModal, setShowModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [hours, setHours] = useState(0);
@@ -52,10 +62,31 @@ const TaskManagerHome2 = () => {
     setTasks((prevTasks) =>
       prevTasks.map((task) =>
         task.id === taskId
-          ? { ...task, completed: isCompleted, spentHours: task.spentHours || (Math.floor(task.defaultTime / 60)), spentMinutes: task.spentMinutes || (task.defaultTime % 60) }
+          ? { ...task, completed: isCompleted, spentHours: task.spentHours || (Math.floor(task.defaultMinutes / 60)), spentMinutes: task.spentMinutes || (task.defaultMinutes % 60) }
           : task
       )
     );
+    if(taskId == selectedTask.id) {
+      try {
+        
+        let spentMinutes;
+        if(selectedTask.spentHours == null && selectedTask.spentMinutes == null) {
+          spentMinutes = selectedTask.defaultMinutes;
+        } else if(selectedTask.spentHours == null) {
+          spentMinutes = (Math.floor(selectedTask.defaultMinutes / 60)) + selectedTask.spentMinutes;
+        } else if(selectedTask.spentMinutes == null) {
+          spentMinutes = (selectedTask.spentHours * 60) + (selectedTask.defaultMinutes % 60);
+        } else {
+          spentMinutes = (selectedTask.spentHours * 60) + selectedTask.spentMinutes;
+        }
+        console.log(spentMinutes);
+        // const spentMinutes =  ((selectedTask.spentHours * 60)+ selectedTask.spentMinutes) || (selectedTask.spentHours * 60) || selectedTask.defaultMinutes;
+        const response = await axios.post('/api/updateTaskStatus', {taskID: selectedTask.id, spentMinutes , isCompleted});
+      } catch (error) {
+        console.error('Error sending data:', error);
+      }
+    }
+
     notifyTaskCompleted();
     setShowModal(false);
   };
@@ -84,12 +115,23 @@ const TaskManagerHome2 = () => {
     setModalOpen(false);
   };
 
-  const handleSubmit = (inputData) => {
+  const handleSubmit = async(inputData) => {
     // setData(inputData);
     if (inputData.title.trim() !== '') {
-      let updatedTasks = [...tasks, inputData];
-      setTasks([...tasks, inputData]);
-      localStorage.setItem('dailyTasks', JSON.stringify(updatedTasks));
+      // let updatedTasks = [...tasks, inputData];
+      // setTasks([...tasks, inputData]);
+      // localStorage.setItem('dailyTasks', JSON.stringify(updatedTasks));
+
+      try {
+        const response = await axios.post('/api/addTasks', {title: inputData.title,defaultTime: inputData.defaultTime});
+        // setMessage(response.data.message);
+        // Clear form fields
+        // setTitle('');
+        // setTime('');
+      } catch (error) {
+        console.error('Error sending data:', error);
+        // setMessage('Failed to add task');
+      }
     }
     setModalOpen(false);
     notifyTaskAdded();
@@ -140,7 +182,7 @@ const TaskManagerHome2 = () => {
                     value={task.spentHours || ''}
                     disabled={task.completed}
                     onChange={(e) => handleSpentHoursChange(task.id, parseFloat(e.target.value))}
-                    placeholder={task.defaultTime > 59 ? `${Math.floor(task.defaultTime / 60)}` : 0}
+                    placeholder={task.defaultMinutes > 59 ? `${Math.floor(task.defaultMinutes / 60)}` : 0}
                     style={{'::placeholder': {color : 'black', opacity: 1}}}
                   />
                   <p>hr</p>
@@ -150,7 +192,7 @@ const TaskManagerHome2 = () => {
                     value={task.spentMinutes || ''}
                     disabled={task.completed}
                     onChange={(e) => handleSpentMinutesChange(task.id, parseFloat(e.target.value))}
-                    placeholder={`${Math.floor(task.defaultTime % 60)}`}
+                    placeholder={`${Math.floor(task.defaultMinutes % 60)}`}
                     style={{'::placeholder': {color : 'black', opacity: 1}}}
                   />
                   <p>min</p>

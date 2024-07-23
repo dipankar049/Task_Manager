@@ -4,7 +4,7 @@ import viteLogo from '/vite.svg'
 import TaskManagerApp from './components/TaskManagerApp'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
 
   return (
     <>
