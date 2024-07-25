@@ -23,7 +23,12 @@ app.get('/api/tasks', (req, res) => {
 });
 
 app.post('/api/addTasks', (req, res) => {
-  const { title, defaultTime } = req.body;
+  const { title,
+    defaultTime, 
+    spentHours,
+    spentMinutes,
+    completed,
+    state } = req.body;
 
   // Validate the input data
   if (!title || defaultTime === undefined) {
@@ -31,9 +36,9 @@ app.post('/api/addTasks', (req, res) => {
   }
 
   // Insert data into the database
-  const query = 'INSERT INTO dailytask (title, defaultMinutes) VALUES (?, ?)';
+  const query = 'INSERT INTO dailytask (title, defaultMinutes, spentHours, spentMinutes, completed, state) VALUES (?, ?, ?, ?, ?, ?)';
 
-  db.query(query, [title, defaultTime], (err, result) => {
+  db.query(query, [title, defaultTime, spentHours, spentMinutes, completed, state], (err, result) => {
     if (err) {
       console.error('Database query error:', err);
       return res.status(500).json({ error: 'Database query failed' });
@@ -43,10 +48,10 @@ app.post('/api/addTasks', (req, res) => {
 });
 
 app.post('/api/updateTaskStatus', (req, res) => {
-  const { taskID, spentMinutes, isCompleted } = req.body;
-  const todayDate = new Date().toISOString().split('T')[0];
-  const query = 'INSERT INTO taskrecords (taskID, spentMinutes, completionDate) VALUES (?, ?, ?)';
-  db.query(query, [taskID, spentMinutes, todayDate ], (err, result) => {
+  const { taskID, spentMinutes, spentHours, completed} = req.body;
+  // const todayDate = new Date().toISOString().split('T')[0];
+  const query = 'UPDATE dailytask SET spentMinutes = ?, spentHours = ?, completed = ? WHERE id = ?';
+  db.query(query, [spentMinutes, spentHours, completed, taskID], (err, result) => {
     if (err) {
       console.error('Database query error:', err);
       return res.status(500).json({ error: 'Database query failed' });

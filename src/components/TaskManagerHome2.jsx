@@ -10,7 +10,6 @@ import { ToastContainer, toast } from 'react-toastify';
 import '../../node_modules/react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 
-
 const TaskManagerHome2 = () => { 
   const buttonsRef = useRef([]);
 
@@ -39,19 +38,17 @@ const TaskManagerHome2 = () => {
       .then(data => setTasks(data))
       .catch(error => console.error('Error fetching data:', error));
   }, []);
-  // const allTasks = JSON.parse(localStorage.getItem('dailyTasks'))|| [
-  //   { id: 1, title: 'Morning Exercise', completed: false, spentHours: 0, spentMinutes: 0, defaultMinutes: 30 },
-  //   { id: 2, title: 'Read a Book', completed: false, spentHours: 0, spentMinutes: 0, defaultMinutes: 120 },
-  //   { id: 3, title: 'React', defaultMinutes: 245, spentHours: 0, spentMinutes: 0, completed: false },
-  //   { id: 4, title: 'Java', defaultMinutes: 120, spentMinutes: 0, completed: false },
-  //   { id: 5, title: 'Meditation', defaultMinutes: 25, spentHours: 0, spentMinutes: 0, completed: false },
-  // ];
 
-  // const [tasks, setTasks] = useState(allTasks);
+  function fetchTask() {
+    // Fetch data from the backend when the component mounts
+    fetch('/api/tasks')
+      .then(response => response.json())
+      .then(data => setTasks(data))
+      .catch(error => console.error('Error fetching data:', error));
+  }
+
   const [showModal, setShowModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
-  const [hours, setHours] = useState(0);
-  const [minutes, setMinutes] = useState(0);
 
   const handleShowModal = (task) => {
     setSelectedTask(task);
@@ -59,34 +56,20 @@ const TaskManagerHome2 = () => {
   };
 
   const handleTaskCompletion = async (taskId, isCompleted) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === taskId
-          ? { ...task, completed: isCompleted, spentHours: task.spentHours || (Math.floor(task.defaultMinutes / 60)), spentMinutes: task.spentMinutes || (task.defaultMinutes % 60) }
-          : task
-      )
-    );
     if(taskId == selectedTask.id) {
       try {
-        
-        let spentMinutes;
-        if(selectedTask.spentHours == null && selectedTask.spentMinutes == null) {
-          spentMinutes = selectedTask.defaultMinutes;
-        } else if(selectedTask.spentHours == null) {
-          spentMinutes = (Math.floor(selectedTask.defaultMinutes / 60)) + selectedTask.spentMinutes;
-        } else if(selectedTask.spentMinutes == null) {
-          spentMinutes = (selectedTask.spentHours * 60) + (selectedTask.defaultMinutes % 60);
-        } else {
-          spentMinutes = (selectedTask.spentHours * 60) + selectedTask.spentMinutes;
-        }
-        console.log(spentMinutes);
-        // const spentMinutes =  ((selectedTask.spentHours * 60)+ selectedTask.spentMinutes) || (selectedTask.spentHours * 60) || selectedTask.defaultMinutes;
-        const response = await axios.post('/api/updateTaskStatus', {taskID: selectedTask.id, spentMinutes , isCompleted});
+        await axios.post('/api/updateTaskStatus', 
+          {
+            taskID: selectedTask.id, 
+            spentMinutes: selectedTask.spentMinutes || (selectedTask.defaultMinutes % 60), 
+            spentHours: selectedTask.spentHours || Math.floor(selectedTask.defaultMinutes / 60), 
+            completed: isCompleted ? 1 : 0
+          });
       } catch (error) {
         console.error('Error sending data:', error);
       }
     }
-
+    fetchTask();
     notifyTaskCompleted();
     setShowModal(false);
   };
@@ -103,9 +86,7 @@ const TaskManagerHome2 = () => {
     );
   };
 
-
   const [isModalOpen, setModalOpen] = useState(false);
-  const [data, setData] = useState(null);
 
   const handleOpenModal = () => {
     setModalOpen(true);
@@ -116,36 +97,30 @@ const TaskManagerHome2 = () => {
   };
 
   const handleSubmit = async(inputData) => {
-    // setData(inputData);
     if (inputData.title.trim() !== '') {
-      // let updatedTasks = [...tasks, inputData];
-      // setTasks([...tasks, inputData]);
-      // localStorage.setItem('dailyTasks', JSON.stringify(updatedTasks));
-
       try {
-        const response = await axios.post('/api/addTasks', {title: inputData.title,defaultTime: inputData.defaultTime});
-        // setMessage(response.data.message);
-        // Clear form fields
-        // setTitle('');
-        // setTime('');
+        const response = await axios.post('/api/addTasks',
+           {
+            title: inputData.title,
+            defaultTime: inputData.defaultTime,
+            spentHours: 0,
+            spentMinutes: 0,
+            completed: 0,
+            state: 'active'
+          });
       } catch (error) {
         console.error('Error sending data:', error);
-        // setMessage('Failed to add task');
       }
     }
+    fetchTask();
     setModalOpen(false);
     notifyTaskAdded();
   };
 
   const handleAddNewTask = () => {
-    // console.log('Add New Task clicked!');
     handleOpenModal();
   };
   
-  useEffect(() => {
-    localStorage.setItem('dailyTasks', JSON.stringify(tasks));
-  }, [tasks]);
-
   return (
 
       <div className='flex w-full h-full'>
