@@ -22,6 +22,17 @@ app.get('/api/tasks', (req, res) => {
   });
 });
 
+app.get('/api/specialTask', (req, res) => {
+  const query = 'SELECT * FROM specialtask';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: 'Database query failed' });
+    }
+    res.json(results);
+  });
+});
+
 app.post('/api/addTasks', (req, res) => {
   const { title,
     defaultTime, 
@@ -52,6 +63,20 @@ app.post('/api/updateTaskStatus', (req, res) => {
   // const todayDate = new Date().toISOString().split('T')[0];
   const query = 'UPDATE dailytask SET spentMinutes = ?, spentHours = ?, completed = ? WHERE id = ?';
   db.query(query, [spentMinutes, spentHours, completed, taskID], (err, result) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: 'Database query failed' });
+    }
+    res.status(201).json({ message: 'Task Updated successfully', taskId: result.insertId });
+  });
+});
+
+app.post('/api/updateSpecialTask', (req, res) => {
+  const {title, start, end, scheduledDate, completed} = req.body;
+  // const todayDate = new Date().toISOString().split('T')[0];
+  // console.log(start.slice(0,10));
+  const query = 'INSERT INTO specialtask (title, start, end, scheduledDate, completed) VALUES (?, ?, ?, ?, ?)';
+  db.query(query, [title, start, end, scheduledDate, completed], (err, result) => {
     if (err) {
       console.error('Database query error:', err);
       return res.status(500).json({ error: 'Database query failed' });

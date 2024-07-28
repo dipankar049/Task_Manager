@@ -9,23 +9,31 @@ import ModalAddTask from './ModelAddTask';
 import { ToastContainer, toast } from 'react-toastify';
 import '../../node_modules/react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
+import ProgressBar from 'react-progressbar';
 
 const TaskManagerHome2 = () => { 
   const buttonsRef = useRef([]);
 
   const { specialTasks } = useSpecialTasks();
+  // const [specialTasks, setSpecialTasks] = useState([]);
+  
+  // fetch('/api/specialTask')
+  //   .then(response => response.json())
+  //   .then(data => setSpecialTasks(data))
+  //   .catch(error => console.error('Error fetching data:', error));
+    
   const today = new Date();
 
   const notifyTaskCompleted = () => toast("Marked as completed!");
   const notifyTaskAdded = () => toast("Task added successfully!");
 
   const todaySpecialTasks = specialTasks.filter((task) => {
-    const dateObject = new Date(task.date); // Convert string to Date object
+    const dateObject = new Date(task.scheduledDate); // Convert string to Date object
     return dateObject.toDateString() === today.toDateString();
   });
 
   const monthSpecialTasks = specialTasks.filter((task) => {
-    const dateObject = new Date(task.date); // Convert string to Date object
+    const dateObject = new Date(task.scheduledDate); // Convert string to Date object
     return dateObject.getFullYear() === today.getFullYear() && dateObject.getMonth() === today.getMonth();
   });
 
@@ -100,7 +108,7 @@ const TaskManagerHome2 = () => {
     if (inputData.title.trim() !== '') {
       try {
         const response = await axios.post('/api/addTasks',
-           {
+          {
             title: inputData.title,
             defaultTime: inputData.defaultTime,
             spentHours: 0,
@@ -134,7 +142,17 @@ const TaskManagerHome2 = () => {
           </div>
           <div className='flex bg-emerald-50 h-full p-6'>
           <div className="w-70p h-fit p-4 mr-4 bg-white rounded-lg drop-shadow-md pb-20">
-            <h2 className='font-serif text-3xl font-bold ml-4 mt-4 mb-6'>Today's Tasks</h2>
+            <div className='flex items-center justify-between'>
+              <h2 className='inline-block font-serif text-3xl font-bold ml-4 mt-4 mb-6'>Today's Tasks</h2>
+              <div className='relative w-1/2 rounded-lg '>
+                <div className='bg-gray-300 rounded-lg overflow-hidden ml-20p'>
+                  <ProgressBar completed={30} bgcolor="#4caf50" height="16px" className=' rounded-lg'/>
+                </div>
+                <span className='absolute inset-0 flex items-center justify-center text-black font-semibold'>{50}%</span>
+              </div>
+              
+            </div>
+            
             <ul>
               {todaySpecialTasks.map((task) => (
                 <li key={task.id} className="flex justify-between w-98p h-12 p-2 pl-4 bg-white drop-shadow-md rounded-full m-4">
@@ -186,7 +204,7 @@ const TaskManagerHome2 = () => {
             <ul className="special-task-list">
               {monthSpecialTasks.map((task) => (
                 <li key={task.id} className="special-task-item">
-                📋{task.title} - {new Date(task.date).toDateString().slice(0, -4)}{task.completed ? '✔️' : '⏳'}
+                📋{task.title} - {new Date(task.scheduledDate).toDateString().slice(0, -4)}{task.completed ? '✔️' : '⏳'}
               </li>
               ))}
             </ul>

@@ -8,24 +8,33 @@ import Modal from './Modal'; // Assuming you have a Modal component
 import './calendar.css'
 import profileImage from '../assets/profile.png'
 import MenubarUn from './MenubarUn';
+import axios from 'axios';
 
 const localizer = momentLocalizer(moment);
-
 const MyCalendar3 = () => {
   const { specialTasks, setSpecialTasks } = useSpecialTasks();
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  const handleSelectSlot = (slotInfo) => {
+  const handleSelectSlot = async(slotInfo) => {
     const title = window.prompt('New Event name');
     if (title) {
       const newEvent = {
-        id: specialTasks.length + 1,
+        // id: specialTasks.length + 1,
         title,
-        start: slotInfo.start,
-        end: slotInfo.end,
-        date: slotInfo.start,
-        completed: false, // Assuming a default completion status
+        start: slotInfo.start.toLocaleDateString('en-CA'),
+        end: slotInfo.end.toLocaleDateString('en-CA'),
+        scheduledDate: slotInfo.start.toLocaleDateString('en-CA'),
+        completed: 0, // Assuming a default completion status
       };
+      // console.log(slotInfo.start.toISOString());
+      console.log(slotInfo.start.toLocaleDateString('en-CA'));
+      // console.log(slotInfo.start);
+      
+      try {
+        await axios.post('/api/updateSpecialTask', newEvent);
+      } catch (error) {
+        console.error('Error sending data:', error);
+      }
       const updatedTasks = [...specialTasks, newEvent];
       setSpecialTasks(updatedTasks);
       localStorage.setItem('specialTasks', JSON.stringify(updatedTasks));
