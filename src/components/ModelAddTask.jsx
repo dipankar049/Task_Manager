@@ -1,6 +1,7 @@
 // Modal.js
 import React from 'react';
 import './ModelAddTask.css'
+import axios from 'axios';
 
 const ModalAddTask = ({ show, onClose, onSubmit }) => {
   const [title, setTitle] = React.useState('');
@@ -10,16 +11,32 @@ const ModalAddTask = ({ show, onClose, onSubmit }) => {
     return null;
   }
 
-  const handleSubmit = () => {
-    onSubmit({
-      id: Date.now(),
-      title,
-      completed: false,
-      spentHours: 0,
-      spentMinutes: 0,
-      defaultTime: parseInt(defaultTime, 10)
-    });
+  const handleSubmit = async() => {
+    // onSubmit({
+    //   id: Date.now(),
+    //   title,
+    //   completed: false,
+    //   spentHours: 0,
+    //   spentMinutes: 0,
+    //   defaultTime: parseInt(defaultTime, 10)
+    // });
     // onSubmit(inputData);
+    if (title.trim() !== '') {
+      try {
+        const response = await axios.post('/api/addTasks',
+          {
+            title,
+            defaultTime,
+            spentHours: 0,
+            spentMinutes: 0,
+            completed: 0,
+            state: 'active'
+          });
+      } catch (error) {
+        console.error('Error sending data:', error);
+      }
+    }
+    onSubmit();
     setTitle('');
     setDefaultTime('');
   };

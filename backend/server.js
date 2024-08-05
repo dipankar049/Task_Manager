@@ -12,8 +12,8 @@ app.get('/api/hello', (req, res) => {
 });
 
 app.get('/api/tasks', (req, res) => {
-  const query = 'SELECT * FROM dailytask';
-  db.query(query, (err, results) => {
+  // const query = 'SELECT * FROM dailytask WHERE state = ?';
+  db.query('SELECT * FROM dailytask WHERE state = ?', ['active'], (err, results) => {
     if (err) {
       console.error('Database query error:', err);
       return res.status(500).json({ error: 'Database query failed' });
@@ -84,6 +84,67 @@ app.post('/api/updateSpecialTask', (req, res) => {
     res.status(201).json({ message: 'Task Updated successfully', taskId: result.insertId });
   });
 });
+
+app.post('/api/updateSpecialTaskStatus', (req, res) => {
+  const { id, completed} = req.body;
+  // const todayDate = new Date().toISOString().split('T')[0];
+  const query = 'UPDATE specialtask SET completed = ? WHERE id = ?';
+  db.query(query, [completed, id], (err, result) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: 'Database query failed' });
+    }
+    res.status(201).json({ message: 'Task Updated successfully', taskId: result.insertId });
+  });
+});
+
+app.get('/api/updateTasks', (req, res) => {
+  // const query = 'SELECT * FROM dailytask WHERE state != ?';
+  db.query('SELECT * FROM dailytask WHERE state != ?', ['removed'], (err, results) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: 'Database query failed' });
+    }
+    res.json(results);
+  });
+});
+
+app.post('/api/updateTaskState', (req, res) => {
+  const { taskID, state} = req.body;
+  // const todayDate = new Date().toISOString().split('T')[0];
+  const query = 'UPDATE dailytask SET state = ? WHERE id = ?';
+  db.query(query, [state, taskID], (err, result) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: 'Database query failed' });
+    }
+    res.status(201).json({ message: 'Task Updated successfully', taskId: result.insertId });
+  });
+});
+
+
+app.post('/api/removeTask', (req, res) => {
+  const { taskID } = req.body;
+  db.query('UPDATE dailytask SET state = ? WHERE id = ?', ['removed', taskID], (err, result) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: 'Database query failed' });
+    }
+    res.status(201).json({ message: 'Task Updated successfully', taskId: result.insertId });
+  });
+});
+
+app.post('/api/renameTask', (req, res) => {
+  const { taskID, title, defaultTime } = req.body;
+  db.query('UPDATE dailytask SET title = ?, defaultMinutes = ? WHERE id = ?', [title, defaultTime, taskID], (err, result) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: 'Database query failed' });
+    }
+    res.status(201).json({ message: 'Task Updated successfully', taskId: result.insertId });
+  });
+});
+
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

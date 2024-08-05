@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import './Modal.css'; // Ensure to import the CSS file
 
-const Modal = ({ show, onClose, onConfirm, title, taskState }) => {
+const Modal = ({ show, onClose, onConfirm, title, taskState, buttonContent }) => {
   const modalRef = useRef(null);
 
   useEffect(() => {
@@ -35,7 +35,7 @@ const Modal = ({ show, onClose, onConfirm, title, taskState }) => {
             className='bg-black hover:bg-gray-700 text-white py-1 px-4 mt-2 rounded'
             onClick={() => onConfirm(true)}
           >
-            Completed
+          {buttonContent ? buttonContent : 'Completed'}
           </button>
         )}
         {taskState && (
